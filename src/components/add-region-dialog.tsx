@@ -96,7 +96,7 @@ export function AddRegionDialog({
               {available.map((region) => (
                 <label
                   key={region.code}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-accent cursor-pointer"
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-accent cursor-pointer"
                 >
                   <input
                     type="checkbox"

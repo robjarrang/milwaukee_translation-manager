@@ -17,11 +17,11 @@ export default async function DashboardPage() {
   const projects = await getProjects();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl">Projects</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage email translation projects
           </p>
         </div>
@@ -53,9 +53,9 @@ export default async function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+              <Card className="hover:border-[#DB011C]/50 transition-colors cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{project.name}</CardTitle>
+                  <CardTitle>{project.name}</CardTitle>
                   <CardDescription>
                     Created{" "}
                     {new Date(project.createdAt).toLocaleDateString("en-GB", {
@@ -73,17 +73,17 @@ export default async function DashboardPage() {
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
                       {project.regionCounts.complete > 0 && (
-                        <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-green-900 bg-green-100 px-2 py-0.5">
                           {project.regionCounts.complete} complete
                         </span>
                       )}
                       {project.regionCounts.partial > 0 && (
-                        <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5">
                           {project.regionCounts.partial} partial
                         </span>
                       )}
                       {project.regionCounts.pending > 0 && (
-                        <span className="text-xs text-red-700 bg-red-50 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#DB011C] bg-[#DB011C]/10 px-2 py-0.5">
                           {project.regionCounts.pending} pending
                         </span>
                       )}

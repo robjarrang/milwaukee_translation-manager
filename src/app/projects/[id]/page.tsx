@@ -66,7 +66,7 @@ export default async function ProjectPage({
   const existingCodes = regionsData.map((r) => r.localeCode);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -76,7 +76,7 @@ export default async function ProjectPage({
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl">
               {project.name}
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -126,7 +126,7 @@ export default async function ProjectPage({
         <TabsContent value="english">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">English Source Copy</CardTitle>
+              <CardTitle>English Source Copy</CardTitle>
               <CardDescription>
                 Enter the English values for each field. These will be shown as
                 reference to regional translators.
@@ -157,7 +157,7 @@ export default async function ProjectPage({
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <div>
-                <CardTitle className="text-base">Regions</CardTitle>
+                <CardTitle>Regions</CardTitle>
                 <CardDescription>
                   Add regions and track translation progress
                 </CardDescription>
@@ -180,7 +180,7 @@ export default async function ProjectPage({
                     return (
                       <div
                         key={region.id}
-                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 transition-colors"
+                        className="flex items-center justify-between border p-3 hover:bg-accent/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <StatusBadge

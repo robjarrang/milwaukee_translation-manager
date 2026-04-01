@@ -7,15 +7,15 @@ interface StatusBadgeProps {
 const config = {
   pending: {
     label: "Pending",
-    className: "bg-red-100 text-red-800 hover:bg-red-100 border-red-200",
+    className: "bg-[#DB011C]/10 text-[#DB011C] border-[#DB011C]/20",
   },
   partial: {
-    label: "Partial",
-    className: "bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200",
+    label: "In Progress",
+    className: "bg-amber-100 text-amber-900 border-amber-300",
   },
   complete: {
     label: "Complete",
-    className: "bg-green-100 text-green-800 hover:bg-green-100 border-green-200",
+    className: "bg-green-100 text-green-900 border-green-300",
   },
 };
 

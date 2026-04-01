@@ -64,7 +64,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
       </div>
 
       {fields.length === 0 && (
-        <p className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">
+        <p className="text-sm text-muted-foreground py-4 text-center border border-dashed">
           No fields yet. Click &ldquo;Add Field&rdquo; to get started.
         </p>
       )}
@@ -73,7 +73,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
         {fields.map((field, index) => (
           <div
             key={field.id}
-            className="flex items-center gap-2 rounded-lg border bg-card p-3"
+            className="flex items-center gap-2 border bg-card p-3"
           >
             <div className="flex flex-col gap-0.5">
               <Button

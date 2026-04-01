@@ -78,7 +78,7 @@ export function TranslationForm({
             </div>
 
             {/* English reference */}
-            <div className="rounded-md bg-muted/50 p-3">
+            <div className="bg-muted/50 p-3 border border-border">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   English

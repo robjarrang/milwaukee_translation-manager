@@ -46,7 +46,7 @@ export default async function RegionTranslationPage({
   const regionDef = getRegionByCode(locale);
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-8 max-w-3xl">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link href={`/projects/${project.id}`}>
@@ -56,7 +56,7 @@ export default async function RegionTranslationPage({
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl">
               {regionDef?.label ?? locale}
             </h1>
             <StatusBadge
@@ -72,7 +72,7 @@ export default async function RegionTranslationPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Translations</CardTitle>
+          <CardTitle>Translations</CardTitle>
           <CardDescription>
             Enter the translated copy for each field. The English source is shown
             as reference — click the copy icon to copy any value to your

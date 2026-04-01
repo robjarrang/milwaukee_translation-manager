@@ -25,7 +25,7 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-8 max-w-2xl">
       <div className="flex items-center gap-3">
         <Link href="/">
           <Button variant="ghost" size="icon">
@@ -33,8 +33,8 @@ export default function NewProjectPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Project</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl">New Project</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Set up a new translation project with custom fields
           </p>
         </div>
@@ -44,7 +44,7 @@ export default function NewProjectPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Project Details</CardTitle>
+              <CardTitle>Project Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -78,7 +78,7 @@ export default function NewProjectPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Translation Fields</CardTitle>
+              <CardTitle>Translation Fields</CardTitle>
             </CardHeader>
             <CardContent>
               <FieldBuilder fields={fields} onChange={setFields} />

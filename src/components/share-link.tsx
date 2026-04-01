@@ -20,7 +20,7 @@ export function ShareLink({ url }: ShareLinkProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2">
+    <div className="flex items-center gap-2 border bg-muted/50 px-3 py-2">
       <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
       <code className="text-sm flex-1 truncate">{url}</code>
       <Button variant="ghost" size="sm" onClick={handleCopy}>

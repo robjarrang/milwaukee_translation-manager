@@ -31,19 +31,28 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <TooltipProvider>
-          <header className="border-b bg-card">
-            <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
-              <a href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-                <span className="inline-block w-3 h-3 rounded-sm bg-primary" />
-                Milwaukee Translation Manager
+          <header className="bg-[#231F20] border-b border-[#333]">
+            <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+              <a href="/" className="flex items-center gap-3 group">
+                <span className="inline-block w-8 h-8 bg-[#DB011C]" />
+                <span className="text-white text-sm font-black uppercase tracking-wider">
+                  Milwaukee<span className="hidden sm:inline"> Translation Manager</span>
+                </span>
               </a>
             </div>
           </header>
           <main className="flex-1">
-            <div className="mx-auto max-w-6xl px-4 py-6">
+            <div className="mx-auto max-w-6xl px-4 py-8">
               {children}
             </div>
           </main>
+          <footer className="bg-[#231F20] border-t border-[#333]">
+            <div className="mx-auto max-w-6xl px-4 py-3">
+              <p className="text-xs text-[#57585B] uppercase tracking-wider">
+                Milwaukee Tool — Translation Manager
+              </p>
+            </div>
+          </footer>
           <Toaster richColors />
         </TooltipProvider>
       </body>
