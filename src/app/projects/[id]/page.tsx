@@ -22,6 +22,7 @@ import { EnglishValuesForm } from "@/components/english-values-form";
 import { AddRegionDialog } from "@/components/add-region-dialog";
 import { ShareLink } from "@/components/share-link";
 import { EditableProjectName } from "@/components/editable-project-name";
+import { FieldEditor } from "@/components/field-editor";
 import {
   DeleteProjectButton,
   RemoveRegionButton,
@@ -122,6 +123,9 @@ export default async function ProjectPage({
           </TabsTrigger>
           <TabsTrigger value="regions">
             Regions ({regionsData.length})
+          </TabsTrigger>
+          <TabsTrigger value="fields">
+            Fields ({fieldsData.length})
           </TabsTrigger>
         </TabsList>
 
@@ -227,6 +231,28 @@ export default async function ProjectPage({
                   })}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fields">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Fields</CardTitle>
+              <CardDescription>
+                Add, edit, or remove fields. Changes affect all regions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FieldEditor
+                projectId={project.id}
+                fields={fieldsData.map((f) => ({
+                  id: f.id,
+                  name: f.name,
+                  fieldType: f.fieldType as "text" | "textarea" | "url",
+                  sortOrder: f.sortOrder,
+                }))}
+              />
             </CardContent>
           </Card>
         </TabsContent>

@@ -133,6 +133,100 @@ export async function getFieldsForProject(projectId: string) {
     .orderBy(asc(fields.sortOrder));
 }
 
+export async function addFieldToExistingProject(
+  projectId: string,
+  name: string,
+  fieldType: "text" | "textarea" | "url",
+  sortOrder: number
+) {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Field name is required");
+
+  const [field] = await db
+    .insert(fields)
+    .values({ projectId, name: trimmed, fieldType, sortOrder })
+    .returning();
+
+  await db.insert(englishValues).values({ fieldId: field.id, value: "" });
+
+  await db
+    .update(projects)
+    .set({ updatedAt: new Date() })
+    .where(eq(projects.id, projectId));
+
+  revalidatePath(`/projects/${projectId}`);
+  return field;
+}
+
+export async function updateField(
+  projectId: string,
+  fieldId: string,
+  name: string,
+  fieldType: "text" | "textarea" | "url"
+) {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Field name is required");
+
+  await db
+    .update(fields)
+    .set({ name: trimmed, fieldType })
+    .where(eq(fields.id, fieldId));
+
+  await db
+    .update(projects)
+    .set({ updatedAt: new Date() })
+    .where(eq(projects.id, projectId));
+
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function removeField(projectId: string, fieldId: string) {
+  // Cascade will delete english_values and translations
+  await db.delete(fields).where(eq(fields.id, fieldId));
+
+  await db
+    .update(projects)
+    .set({ updatedAt: new Date() })
+    .where(eq(projects.id, projectId));
+
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function reorderFields(
+  projectId: string,
+  fieldIds: string[]
+) {
+  for (let i = 0; i < fieldIds.length; i++) {
+    await db
+      .update(fields)
+      .set({ sortOrder: i })
+      .where(eq(fields.id, fieldIds[i]));
+  }
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function getFieldPopulationStatus(fieldId: string) {
+  // Check if this field has any non-empty english value or translations
+  const [ev] = await db
+    .select({ value: englishValues.value })
+    .from(englishValues)
+    .where(eq(englishValues.fieldId, fieldId))
+    .limit(1);
+
+  const hasEnglish = ev && ev.value.trim().length > 0;
+
+  const translationRows = await db
+    .select({ value: translations.value })
+    .from(translations)
+    .where(eq(translations.fieldId, fieldId));
+
+  const translationCount = translationRows.filter(
+    (t) => t.value.trim().length > 0
+  ).length;
+
+  return { hasEnglish: !!hasEnglish, translationCount };
+}
+
 export async function saveEnglishValues(projectId: string, formData: FormData) {
   const fieldIds = formData.getAll("fieldId") as string[];
   const values = formData.getAll("value") as string[];
