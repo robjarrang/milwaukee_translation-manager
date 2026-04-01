@@ -34,6 +34,7 @@ export async function getProjects() {
       const regionRows = await db
         .select({
           status: regions.status,
+          localeCode: regions.localeCode,
         })
         .from(regions)
         .where(eq(regions.projectId, project.id));
@@ -42,8 +43,9 @@ export async function getProjects() {
       const complete = regionRows.filter((r) => r.status === "complete").length;
       const partial = regionRows.filter((r) => r.status === "partial").length;
       const pending = regionRows.filter((r) => r.status === "pending").length;
+      const localeCodes = regionRows.map((r) => r.localeCode);
 
-      return { ...project, regionCounts: { total, complete, partial, pending } };
+      return { ...project, regionCounts: { total, complete, partial, pending }, localeCodes };
     })
   );
 
@@ -99,6 +101,17 @@ export async function deleteProject(id: string) {
   await db.delete(projects).where(eq(projects.id, id));
   revalidatePath("/");
   redirect("/");
+}
+
+export async function renameProject(id: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Project name is required");
+  await db
+    .update(projects)
+    .set({ name: trimmed, updatedAt: new Date() })
+    .where(eq(projects.id, id));
+  revalidatePath(`/projects/${id}`);
+  revalidatePath("/");
 }
 
 // ─── Fields ────────────────────────────────────────────────

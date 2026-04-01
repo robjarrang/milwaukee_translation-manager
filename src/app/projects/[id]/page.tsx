@@ -21,6 +21,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { EnglishValuesForm } from "@/components/english-values-form";
 import { AddRegionDialog } from "@/components/add-region-dialog";
 import { ShareLink } from "@/components/share-link";
+import { EditableProjectName } from "@/components/editable-project-name";
 import {
   DeleteProjectButton,
   RemoveRegionButton,
@@ -76,9 +77,10 @@ export default async function ProjectPage({
             </Button>
           </Link>
           <div>
-            <h1 className="text-xl">
-              {project.name}
-            </h1>
+            <EditableProjectName
+              projectId={project.id}
+              initialName={project.name}
+            />
             <p className="text-sm text-muted-foreground">
               Created{" "}
               {new Date(project.createdAt).toLocaleDateString("en-GB", {
