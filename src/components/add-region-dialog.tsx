@@ -102,7 +102,7 @@ export function AddRegionDialog({
                     type="checkbox"
                     checked={selected.has(region.code)}
                     onChange={() => toggleRegion(region.code)}
-                    className="rounded accent-primary"
+                    className="rounded accent-primary cursor-pointer"
                   />
                   <span className="font-mono text-sm">{region.code}</span>
                   <span className="text-sm text-muted-foreground">
