@@ -35,9 +35,9 @@ export default function RootLayout({
           <header className="bg-[#231F20] border-b border-[#333]">
             <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
               <a href="/" className="flex items-center gap-3 group">
-                <span className="inline-block w-8 h-8 bg-[#DB011C]" />
+                <img src="/milwaukee-logo.png" alt="Milwaukee" className="h-8 w-auto" />
                 <span className="text-white text-sm font-black uppercase tracking-wider">
-                  Milwaukee<span className="hidden sm:inline"> Translation Manager</span>
+                  Translation Manager
                 </span>
               </a>
             </div>
