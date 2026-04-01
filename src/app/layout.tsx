@@ -33,9 +33,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <TooltipProvider>
           <header className="bg-[#231F20] border-b border-[#333]">
-            <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+            <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
               <a href="/" className="flex items-center gap-3 group">
-                <img src="/milwaukee-logo.png" alt="Milwaukee" className="h-8 w-auto" />
+                <img src="/milwaukee-logo.png" alt="Milwaukee" className="h-12 w-auto" />
                 <span className="text-white text-sm font-black uppercase tracking-wider">
                   Translation Manager
                 </span>
