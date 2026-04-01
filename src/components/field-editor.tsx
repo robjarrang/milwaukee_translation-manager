@@ -18,15 +18,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash2, Plus, Copy, Layers, Save, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, Copy, Layers, Save, AlertTriangle, GripVertical } from "lucide-react";
 import { groupFields, getNextStoryNumber } from "@/lib/field-groups";
 import {
   addFieldToExistingProject,
   updateField,
   removeField,
+  reorderFields,
   getFieldPopulationStatus,
 } from "@/lib/actions";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface ExistingField {
   id: string;
@@ -56,6 +73,31 @@ export function FieldEditor({ projectId, fields: initialFields }: FieldEditorPro
   const [deleting, setDeleting] = useState(false);
 
   const grouped = groupFields(fields);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = fields.findIndex((f) => f.id === active.id);
+    const newIndex = fields.findIndex((f) => f.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const updated = [...fields];
+    const [moved] = updated.splice(oldIndex, 1);
+    updated.splice(newIndex, 0, moved);
+    setFields(updated);
+    // Persist the new order
+    startTransition(async () => {
+      try {
+        await reorderFields(projectId, updated.map((f) => f.id));
+      } catch {
+        toast.error("Failed to save field order");
+      }
+    });
+  };
 
   const markDirty = (id: string) => {
     setDirty((prev) => new Set(prev).add(id));
@@ -329,48 +371,16 @@ export function FieldEditor({ projectId, fields: initialFields }: FieldEditorPro
   const renderField = (field: ExistingField) => {
     const isDirty = dirty.has(field.id);
     return (
-      <div key={field.id} className="flex items-center gap-2 border bg-card p-2.5">
-        <Input
-          value={field.name}
-          onChange={(e) => updateLocal(field.id, "name", e.target.value)}
-          className="flex-1"
-        />
-        <Select
-          value={field.fieldType}
-          onValueChange={(v) =>
-            updateLocal(field.id, "fieldType", v as string)
-          }
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="text">Text</SelectItem>
-            <SelectItem value="textarea">Textarea</SelectItem>
-            <SelectItem value="url">URL</SelectItem>
-          </SelectContent>
-        </Select>
-        {isDirty && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-green-600 shrink-0"
-            onClick={() => handleSaveField(field)}
-            disabled={isPending}
-          >
-            <Save className="h-4 w-4" />
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-          onClick={() => handleRequestDelete(field)}
-          disabled={isPending || checkingDelete}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+      <SortableEditorRow
+        key={field.id}
+        field={field}
+        isDirty={isDirty}
+        isPending={isPending}
+        checkingDelete={checkingDelete}
+        onUpdate={updateLocal}
+        onSave={handleSaveField}
+        onDelete={handleRequestDelete}
+      />
     );
   };
 
@@ -416,59 +426,63 @@ export function FieldEditor({ projectId, fields: initialFields }: FieldEditorPro
           </div>
         )}
 
-        <div className="space-y-3">
-          {grouped.map((item) => {
-            if (item.type === "field" && item.field) {
-              return renderField(item.field as ExistingField);
-            }
-            if (item.type === "group" && item.groupName && item.fields) {
-              return (
-                <div
-                  key={item.groupName}
-                  className="border-l-4 border-l-[#DB011C] bg-muted/30 p-3 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#DB011C]">
-                      {item.groupName}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => handleAddFieldToStory(item.groupName!)}
-                        disabled={isPending}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Field
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => handleDuplicateStory(item.groupName!)}
-                        disabled={isPending}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Duplicate
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        className="text-muted-foreground hover:text-destructive"
-                        onClick={() => handleRemoveStory(item.groupName!)}
-                        disabled={isPending || checkingDelete}
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Remove
-                      </Button>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-3">
+              {grouped.map((item) => {
+                if (item.type === "field" && item.field) {
+                  return renderField(item.field as ExistingField);
+                }
+                if (item.type === "group" && item.groupName && item.fields) {
+                  return (
+                    <div
+                      key={item.groupName}
+                      className="border-l-4 border-l-[#DB011C] bg-muted/30 p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#DB011C]">
+                          {item.groupName}
+                        </span>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => handleAddFieldToStory(item.groupName!)}
+                            disabled={isPending}
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Field
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => handleDuplicateStory(item.groupName!)}
+                            disabled={isPending}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Duplicate
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => handleRemoveStory(item.groupName!)}
+                            disabled={isPending || checkingDelete}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                      {(item.fields as ExistingField[]).map((f) => renderField(f))}
                     </div>
-                  </div>
-                  {(item.fields as ExistingField[]).map((f) => renderField(f))}
-                </div>
-              );
-            }
-            return null;
-          })}
-        </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* Delete confirmation dialog */}
@@ -528,5 +542,93 @@ export function FieldEditor({ projectId, fields: initialFields }: FieldEditorPro
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function SortableEditorRow({
+  field,
+  isDirty,
+  isPending,
+  checkingDelete,
+  onUpdate,
+  onSave,
+  onDelete,
+}: {
+  field: ExistingField;
+  isDirty: boolean;
+  isPending: boolean;
+  checkingDelete: boolean;
+  onUpdate: (id: string, key: "name" | "fieldType", value: string) => void;
+  onSave: (field: ExistingField) => void;
+  onDelete: (field: ExistingField) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 border bg-card p-2.5"
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Input
+        value={field.name}
+        onChange={(e) => onUpdate(field.id, "name", e.target.value)}
+        className="flex-1"
+      />
+      <Select
+        value={field.fieldType}
+        onValueChange={(v) => onUpdate(field.id, "fieldType", v as string)}
+      >
+        <SelectTrigger className="w-[120px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="text">Text</SelectItem>
+          <SelectItem value="textarea">Textarea</SelectItem>
+          <SelectItem value="url">URL</SelectItem>
+        </SelectContent>
+      </Select>
+      {isDirty && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-green-600 shrink-0"
+          onClick={() => onSave(field)}
+          disabled={isPending}
+        >
+          <Save className="h-4 w-4" />
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+        onClick={() => onDelete(field)}
+        disabled={isPending || checkingDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }

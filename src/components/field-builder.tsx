@@ -10,8 +10,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Copy, Layers } from "lucide-react";
+import { Trash2, Plus, Copy, Layers, GripVertical } from "lucide-react";
 import { groupFields, getNextStoryNumber } from "@/lib/field-groups";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export interface FieldDefinition {
   id: string;
@@ -39,8 +55,33 @@ function makeStoryFields(n: number): FieldDefinition[] {
   ];
 }
 
+export function makeDefaultPreset(): FieldDefinition[] {
+  return [
+    { id: genId(), name: "Subject Line", type: "text" },
+    { id: genId(), name: "Preview Text", type: "text" },
+    ...makeStoryFields(1),
+  ];
+}
+
 export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
   const grouped = groupFields(fields);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = fields.findIndex((f) => f.id === active.id);
+    const newIndex = fields.findIndex((f) => f.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const updated = [...fields];
+    const [moved] = updated.splice(oldIndex, 1);
+    updated.splice(newIndex, 0, moved);
+    onChange(updated);
+  };
 
   const addField = () => {
     onChange([...fields, { id: genId(), name: "", type: "text" }]);
@@ -102,41 +143,13 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
     field: FieldDefinition,
     showPrefix?: string
   ) => (
-    <div
+    <SortableFieldRow
       key={field.id}
-      className="flex items-center gap-2 border bg-card p-2.5"
-    >
-      <Input
-        placeholder={showPrefix ? `${showPrefix} field name...` : "Field name"}
-        value={field.name}
-        onChange={(e) => updateField(field.id, "name", e.target.value)}
-        className="flex-1"
-        name="fieldName"
-      />
-      <Select
-        value={field.type}
-        onValueChange={(v) => updateField(field.id, "type", v as string)}
-      >
-        <SelectTrigger className="w-[120px]">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="text">Text</SelectItem>
-          <SelectItem value="textarea">Textarea</SelectItem>
-          <SelectItem value="url">URL</SelectItem>
-        </SelectContent>
-      </Select>
-      <input type="hidden" name="fieldType" value={field.type} />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-        onClick={() => removeField(field.id)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </div>
+      field={field}
+      showPrefix={showPrefix}
+      onUpdate={updateField}
+      onRemove={removeField}
+    />
   );
 
   return (
@@ -156,29 +169,17 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
       </div>
 
       {fields.length === 0 && (
-        <div className="text-center py-6 border border-dashed space-y-3">
+        <div className="text-center py-6 border border-dashed">
           <p className="text-sm text-muted-foreground">
-            No fields yet. Load a preset or add fields manually.
+            No fields yet. Add fields manually or add a story.
           </p>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              onChange([
-                { id: genId(), name: "Subject Line", type: "text" },
-                { id: genId(), name: "Preview Text", type: "text" },
-                ...makeStoryFields(1),
-              ]);
-            }}
-          >
-            Load email preset
-          </Button>
         </div>
       )}
 
-      <div className="space-y-3">
-        {grouped.map((item) => {
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-3">
+            {grouped.map((item) => {
           if (item.type === "field" && item.field) {
             return renderField(item.field);
           }
@@ -229,7 +230,83 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
           }
           return null;
         })}
-      </div>
+          </div>
+        </SortableContext>
+      </DndContext>
+    </div>
+  );
+}
+
+function SortableFieldRow({
+  field,
+  showPrefix,
+  onUpdate,
+  onRemove,
+}: {
+  field: FieldDefinition;
+  showPrefix?: string;
+  onUpdate: (id: string, key: keyof FieldDefinition, value: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 border bg-card p-2.5"
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Input
+        placeholder={showPrefix ? `${showPrefix} field name...` : "Field name"}
+        value={field.name}
+        onChange={(e) => onUpdate(field.id, "name", e.target.value)}
+        className="flex-1"
+        name="fieldName"
+      />
+      <Select
+        value={field.type}
+        onValueChange={(v) => onUpdate(field.id, "type", v as string)}
+      >
+        <SelectTrigger className="w-[120px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="text">Text</SelectItem>
+          <SelectItem value="textarea">Textarea</SelectItem>
+          <SelectItem value="url">URL</SelectItem>
+        </SelectContent>
+      </Select>
+      <input type="hidden" name="fieldType" value={field.type} />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+        onClick={() => onRemove(field.id)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

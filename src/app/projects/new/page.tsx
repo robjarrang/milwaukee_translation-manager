@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FieldBuilder, FieldDefinition } from "@/components/field-builder";
+import { FieldBuilder, FieldDefinition, makeDefaultPreset } from "@/components/field-builder";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function NewProjectPage() {
-  const [fields, setFields] = useState<FieldDefinition[]>([]);
+  const [fields, setFields] = useState<FieldDefinition[]>(makeDefaultPreset);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
